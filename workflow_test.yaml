@@ -1,0 +1,86 @@
+# Workflow defined in YAML.
+---
+parameters:
+  source_dir: ./wirc_recordings/
+  target_dir: ./video_target
+
+workflow:
+  - step_id: video_files
+    description: Get list of video files.
+    input_from: None
+    input_format: None
+    input_queue_size: 100
+    algorithm: VideoFiles
+    parameters:
+      path_glob_string: "**/rpi-cam0_20260117T230*.mp4"
+    recursive: True
+    output_formats:
+      - video_path
+
+  - step_id: read_video
+    description: Read video file.
+    input_from: video_files
+    input_format: video_path
+    input_queue_size: 100
+    algorithm: ReadVideo
+    parameters:
+      todo: TODO
+    output_formats:
+      - video_frame
+
+  - step_id: process_frame
+    description: Process video frame.
+    input_from: read_video
+    input_format: video_frame
+    input_queue_size: 100
+    algorithm: ProcessFrame
+    parameters:
+      todo: TODO
+    output_formats:
+      - video_frame
+
+  # - step_id: extract_movements
+  #   description: Extract moving elements.
+  #   input_from: process_frame
+  #   input_format: video_frame
+  #   input_queue_size: 100
+  #   algorithm: ExtractMovingElements
+  #   parameters:
+  #     kernel_size: (5, 5)
+  #     min_contour_area: 500
+  #     max_contour_area: 5000
+  #     skip_empty_frames: true
+  #   output_formats:
+  #     - video_frame
+  #     - movements_in_frame
+
+  - step_id: save_video
+    description: Save video.
+    # input_from: extract_movements
+    input_from: process_frame
+    input_format: video_frame
+    input_queue_size: 100
+    algorithm: SaveVideo
+    parameters:
+      video_name: "test_movements.mp4"
+    output_formats: None
+
+  # - step_id: save_diagram
+  #   description: Save as diagram.
+  #   input_from: extract_movements
+  #   input_format: movements_in_frame
+  #   input_queue_size: 100
+  #   algorithm: SaveDiagram
+  #   parameters:
+  #     video_name: test_<datetime>_movements.jpeg
+  #   output_formats: None
+
+  # - step_id: save_table
+  #   description: Save as diagram.
+  #   input_from: extract_movements
+  #   input_format: movements_in_frame
+  #   input_queue_size: 100
+  #   algorithm: SaveTable
+  #   parameters:
+  #     video_name: test_<datetime>_movements.xlsx
+  #   output_formats: None
