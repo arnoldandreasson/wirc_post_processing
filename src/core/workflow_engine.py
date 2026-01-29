@@ -21,7 +21,6 @@ class WorkflowEngine:
         #
         self.class_name = self.__class__.__name__
         self.clear()
-        # self.configure()
 
     def clear(self):
         """ """
@@ -29,25 +28,13 @@ class WorkflowEngine:
         self.workflow_steps = []
         self.step_lookup = {}
         self.step_config = {}
-        # Parameters.
-        self.source_dir = "wirc_recordings"
-        self.target_dir = "video_target"
-        #
 
     def configure(self, parameters):
         """ """
-        self.class_name = self.__class__.__name__
-        p = parameters
-        self.source_dir = p.get("source_dir", self.source_dir)
-        self.target_dir = p.get("target_dir", self.target_dir)
 
-    # def launch_startup(self, config_file):
-    #     """ """
-    #     loop = asyncio.get_event_loop()
-    #     self.startup_task = asyncio.create_task(
-    #         self.startup(config_file), name="Workflow startup."
-    #     )
-    #     asyncio.wait_for(self.startup_task, timeout=0)
+    def run_startup(self, config_file):
+        """ """
+        asyncio.run(self.startup(config_file))
 
     async def startup(self, config_file):
         """ """
@@ -62,16 +49,13 @@ class WorkflowEngine:
         await self.execute_steps()
         await asyncio.sleep(0)
         #
-        print("Done.")
+        self.logger.info("Done.")
 
     def load_config(self, config_file):
         """ """
         config_path = pathlib.Path(config_file)
         with open(config_path) as file:
             self.config = yaml.load(file, Loader=yaml.FullLoader)
-        #
-        # print(self.config)
-        self.configure(self.config.get("parameters", {}))
 
     def create_steps(self):
         """ """
@@ -89,16 +73,16 @@ class WorkflowEngine:
         for step_id in self.workflow_steps:
             step_dict = self.step_config[step_id]
             if step_id in self.step_lookup:
-                self.step_lookup[step_id].configure(step_dict["parameters"])
+                self.step_lookup[step_id].configure(step_dict)
 
     def connect_steps(self):
         """ """
         for step_id in self.workflow_steps:
             step_dict = self.step_config[step_id]
             if step_id in self.step_lookup:
-                input_from = step_dict.get("input_from", "None")
-                input_format = step_dict.get("input_format", "None")
-                if input_from == "None":
+                input_from = step_dict.get("input_from", None)
+                input_format = step_dict.get("input_format", None)
+                if input_from == None:
                     continue
                 input_queue = self.step_lookup[step_id].get_input_queue()
                 self.step_lookup[input_from].add_output_queue(input_queue, input_format)
@@ -106,12 +90,22 @@ class WorkflowEngine:
     async def execute_steps(self):
         """ """
         tasks = []
-        for step_id in self.workflow_steps:
-            step_dict = self.step_config[step_id]
-            if step_id in self.step_lookup:
-                task = await self.step_lookup[step_id].startup()
-                tasks.append(task)
-                await asyncio.sleep(0)
-        # Wait until finished.
-        await asyncio.wait(tasks)
-        print("Tasks finished.")
+        try:
+            try:
+                for step_id in self.workflow_steps:
+                    step_dict = self.step_config[step_id]
+                    if step_id in self.step_lookup:
+                        task = await self.step_lookup[step_id].startup()
+                        tasks.append(task)
+                        await asyncio.sleep(0)
+                # Wait until finished.
+                await asyncio.wait(tasks)
+                self.logger.debug("Tasks finished.")
+            finally:
+                for task in tasks:
+                    try:
+                        task.cancel()
+                    except:
+                        pass
+        except Exception as e:
+            self.logger.debug("Exception: " + str(e))

@@ -1,19 +1,16 @@
 # Workflow defined in YAML.
 ---
-parameters:
-  source_dir: ./wirc_recordings/
-  target_dir: ./video_target
-
 workflow:
   - step_id: video_files
     description: Get list of video files.
-    input_from: None
-    input_format: None
-    input_queue_size: 100
+    input_from: # None
+    input_format: # None
+    input_queue_size: 1
     algorithm: VideoFiles
     parameters:
-      path_glob_string: "**/rpi-cam0_20260117T230*.mp4"
-    recursive: True
+      source_dir: ./wirc_recordings/
+      # path_glob_string: "**/rpi-cam0_20260117T230*.mp4"
+      path_glob_string: "**/usb-cam0_20260117T230*.mp4"
     output_formats:
       - video_path
 
@@ -21,7 +18,7 @@ workflow:
     description: Read video file.
     input_from: video_files
     input_format: video_path
-    input_queue_size: 100
+    input_queue_size: 1
     algorithm: ReadVideo
     parameters:
       todo: TODO
@@ -32,7 +29,7 @@ workflow:
     description: Process video frame.
     input_from: read_video
     input_format: video_frame
-    input_queue_size: 100
+    input_queue_size: 1
     algorithm: ProcessFrame
     parameters:
       todo: TODO
@@ -59,9 +56,10 @@ workflow:
     # input_from: extract_movements
     input_from: process_frame
     input_format: video_frame
-    input_queue_size: 100
+    input_queue_size: 1
     algorithm: SaveVideo
     parameters:
+      target_dir: ./video_target
       video_name: "test_movements.mp4"
     output_formats: None
 
