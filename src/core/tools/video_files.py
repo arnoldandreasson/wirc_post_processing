@@ -23,6 +23,7 @@ class VideoFile(core.WorkflowModuleBase):
 
     def configure(self, config_dict):
         """ """
+        super().configure(config_dict)
         p = config_dict.get("parameters", {})
         self.source_dir = p.get("source_dir", "./wirc_recordings/")
         self.path_glob_string = p.get("path_glob_string", "**/*.mp4")

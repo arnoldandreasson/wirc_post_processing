@@ -26,7 +26,12 @@ class WorkflowModuleBase:
     @abc.abstractmethod
     def configure(self, config_dict):
         """ """
-        pass
+        # Create input queue.
+        if config_dict.get("input_from", None) != None:
+            self.input_queue_size = config_dict.get(
+                "input_queue_size", self.input_queue_size
+            )
+            self.input_queue = asyncio.Queue(maxsize=self.input_queue_size)
 
     @abc.abstractmethod
     async def pre_process_data(self):

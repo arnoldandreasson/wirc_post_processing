@@ -25,12 +25,8 @@ class ProcessFrame(core.WorkflowModuleBase):
 
     def configure(self, config_dict):
         """ """
+        super().configure(config_dict)
         p = config_dict.get("parameters", {})
-        # Create input queue.
-        self.input_queue_size = config_dict.get(
-            "input_queue_size", self.input_queue_size
-        )
-        self.input_queue = asyncio.Queue(maxsize=self.input_queue_size)
 
     async def pre_process_data(self):
         """ """
