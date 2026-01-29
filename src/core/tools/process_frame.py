@@ -7,7 +7,7 @@ from datetime import datetime
 import cv2
 
 import src.core as core
-import src.core.steps as steps
+import src.core.tools as tools
 
 
 class ProcessFrame(core.WorkflowModuleBase):
@@ -104,5 +104,5 @@ class ProcessFrame(core.WorkflowModuleBase):
         """ """
         await super().post_process_data()
 
-        # This step is finished. No more data.
+        # This tool is finished. No more data.
         await self.data_to_output_queues(None, "video_frame")

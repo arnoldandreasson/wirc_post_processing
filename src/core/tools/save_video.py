@@ -7,7 +7,7 @@ import cv2
 from datetime import datetime
 
 import src.core as core
-import src.core.steps as steps
+import src.core.tools as tools
 
 
 class SaveVideo(core.WorkflowModuleBase):

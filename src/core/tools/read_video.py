@@ -7,7 +7,7 @@ import cv2
 from datetime import datetime
 
 import src.core as core
-import src.core.steps as steps
+import src.core.tools as tools
 
 
 class ReadVideo(core.WorkflowModuleBase):
@@ -82,5 +82,5 @@ class ReadVideo(core.WorkflowModuleBase):
         """ """
         await super().post_process_data()
 
-        # This step is finished. No more data.
+        # This tool is finished. No more data.
         await self.data_to_output_queues(None, "video_frame")

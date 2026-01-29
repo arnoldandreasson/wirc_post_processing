@@ -1,12 +1,12 @@
 # Workflow defined in YAML.
 ---
 workflow:
-  - step_id: video_files
+  - tool_id: video_files
     description: Get list of video files.
     input_from: # None
     input_format: # None
     input_queue_size: 1
-    algorithm: VideoFiles
+    tool: VideoFiles
     parameters:
       source_dir: ./wirc_recordings/
       # path_glob_string: "**/rpi-cam0_20260117T230*.mp4"
@@ -14,34 +14,34 @@ workflow:
     output_formats:
       - video_path
 
-  - step_id: read_video
+  - tool_id: read_video
     description: Read video file.
     input_from: video_files
     input_format: video_path
     input_queue_size: 1
-    algorithm: ReadVideo
+    tool: ReadVideo
     parameters:
       todo: TODO
     output_formats:
       - video_frame
 
-  - step_id: process_frame
+  - tool_id: process_frame
     description: Process video frame.
     input_from: read_video
     input_format: video_frame
     input_queue_size: 1
-    algorithm: ProcessFrame
+    tool: ProcessFrame
     parameters:
       todo: TODO
     output_formats:
       - video_frame
 
-  # - step_id: extract_movements
+  # - tool_id: extract_movements
   #   description: Extract moving elements.
   #   input_from: process_frame
   #   input_format: video_frame
   #   input_queue_size: 100
-  #   algorithm: ExtractMovingElements
+  #   tool: ExtractMovingElements
   #   parameters:
   #     kernel_size: (5, 5)
   #     min_contour_area: 500
@@ -51,34 +51,34 @@ workflow:
   #     - video_frame
   #     - movements_in_frame
 
-  - step_id: save_video
+  - tool_id: save_video
     description: Save video.
     # input_from: extract_movements
     input_from: process_frame
     input_format: video_frame
     input_queue_size: 1
-    algorithm: SaveVideo
+    tool: SaveVideo
     parameters:
       target_dir: ./video_target
       video_name: "test_movements.mp4"
     output_formats: None
 
-  # - step_id: save_diagram
+  # - tool_id: save_diagram
   #   description: Save as diagram.
   #   input_from: extract_movements
   #   input_format: movements_in_frame
   #   input_queue_size: 100
-  #   algorithm: SaveDiagram
+  #   tool: SaveDiagram
   #   parameters:
   #     video_name: test_<datetime>_movements.jpeg
   #   output_formats: None
 
-  # - step_id: save_table
+  # - tool_id: save_table
   #   description: Save as diagram.
   #   input_from: extract_movements
   #   input_format: movements_in_frame
   #   input_queue_size: 100
-  #   algorithm: SaveTable
+  #   tool: SaveTable
   #   parameters:
   #     video_name: test_<datetime>_movements.xlsx
   #   output_formats: None
