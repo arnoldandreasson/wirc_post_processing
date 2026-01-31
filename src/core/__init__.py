@@ -46,4 +46,4 @@ logger.debug("Working directory path: " + str(workdir_path))
 logger.debug("Executable path: " + str(executable_path))
 
 # Workflow.
-workflow_engine = WorkflowEngine(logger_name=logger_name)
+# workflow_engine = WorkflowEngine(logger_name=logger_name)

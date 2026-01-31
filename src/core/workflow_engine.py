@@ -49,7 +49,7 @@ class WorkflowEngine:
         await self.execute_tools()
         await asyncio.sleep(0)
         #
-        self.logger.info("Done.")
+        # self.logger.info("Done.")
 
     def load_config(self, config_file):
         """ """
@@ -92,6 +92,8 @@ class WorkflowEngine:
         tasks = []
         try:
             try:
+                time_start = datetime.now()
+                self.logger.info("Processing started at: " + time_start.isoformat().replace("T", " ")[:-3])
                 for tool_id in self.workflow_tools:
                     tool_dict = self.tool_config[tool_id]
                     if tool_id in self.tool_lookup:
@@ -100,7 +102,9 @@ class WorkflowEngine:
                         await asyncio.sleep(0)
                 # Wait until finished.
                 await asyncio.wait(tasks)
-                self.logger.debug("Tasks finished.")
+                time_end = datetime.now()
+                time_used = time_end - time_start
+                self.logger.info("Finished. Time used: " + str(time_used))
             finally:
                 for task in tasks:
                     try:

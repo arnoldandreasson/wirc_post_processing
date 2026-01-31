@@ -6,7 +6,7 @@ import src.core as core
 
 async def main():
     """ """
-    engine = core.WorkflowEngine()
+    engine = core.WorkflowEngine(logger_name=core.logger_name)
     await engine.startup("workflow_test.yaml")
 
 

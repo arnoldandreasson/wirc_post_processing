@@ -5,12 +5,14 @@ workflow:
     description: Get list of video files.
     input_from: # None
     input_format: # None
-    input_queue_size: 1
+    input_queue_size: 10
     tool: VideoFiles
     parameters:
       source_dir: ./wirc_recordings/
-      # path_glob_string: "**/rpi-cam0_20260117T230*.mp4"
-      path_glob_string: "**/usb-cam0_20260117T230*.mp4"
+      # path_glob_string: "**/*.mp4"
+      # path_glob_string: "**/rpi-cam0_20260117T2308*.mp4"
+      # path_glob_string: "**/usb-cam0_20260117T230*.mp4"
+      path_glob_string: "**/cam0_20260111T16*.mp4"
     output_formats:
       - video_path
 
@@ -18,7 +20,7 @@ workflow:
     description: Read video file.
     input_from: video_files
     input_format: video_path
-    input_queue_size: 1
+    input_queue_size: 10
     tool: ReadVideo
     parameters:
       todo: TODO
@@ -29,34 +31,24 @@ workflow:
     description: Process video frame.
     input_from: read_video
     input_format: video_frame
-    input_queue_size: 1
+    input_queue_size: 10
     tool: ProcessFrame
     parameters:
-      todo: TODO
+      kernel_size: 5
+      min_contour_area: 50
+      max_contour_area: 5000
+      text_info: true
+      font_scale: 1.0
+      # font_scale: 0.75
     output_formats:
       - video_frame
-
-  # - tool_id: extract_movements
-  #   description: Extract moving elements.
-  #   input_from: process_frame
-  #   input_format: video_frame
-  #   input_queue_size: 100
-  #   tool: ExtractMovingElements
-  #   parameters:
-  #     kernel_size: (5, 5)
-  #     min_contour_area: 500
-  #     max_contour_area: 5000
-  #     skip_empty_frames: true
-  #   output_formats:
-  #     - video_frame
-  #     - movements_in_frame
 
   - tool_id: save_video
     description: Save video.
     # input_from: extract_movements
     input_from: process_frame
     input_format: video_frame
-    input_queue_size: 1
+    input_queue_size: 10
     tool: SaveVideo
     parameters:
       target_dir: ./video_target

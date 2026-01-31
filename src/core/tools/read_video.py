@@ -21,7 +21,7 @@ class ReadVideo(core.WorkflowModuleBase):
     def clear(self):
         """ """
         super().clear()
-        self.input_queue_size = 100
+        self.capture = None
 
     def configure(self, config_dict):
         """ """
@@ -35,39 +35,44 @@ class ReadVideo(core.WorkflowModuleBase):
     async def process_data(self, data_dict={}):
         """Put your algorithmic code here."""
         try:
-            video_file_path = data_dict.get("data", "")
-            video_file_path = pathlib.Path(video_file_path)
-            video_name = video_file_path.name
+            video_path = data_dict.get("video_path", None)
+            if video_path == None:
+                return
+            video_path = pathlib.Path(video_path)
+            video_name = video_path.name
             self.logger.info("File: " + video_name)
 
-            start_time = datetime.now()
-
-            frame_index = 0
             # Video stream.
-            capture = cv2.VideoCapture(video_file_path)
-            # # Background.
-            # backSub = cv2.createBackgroundSubtractorMOG2()
-            # # Kernel for morphologyEx.
-            # kernel_size = (5, 5)
-            # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernel_size)
-
-            if not capture.isOpened():
-                self.logger.error("Error opening video file: " + video_file_path.name)
+            frame_index = 0
+            self.capture = cv2.VideoCapture(video_path)
+            if not self.capture.isOpened():
+                self.logger.error("Error opening video file: " + video_path.name)
             else:
-                while capture.isOpened():
-                    # Capture frame-by-frame.
-                    ret, frame_bgr = capture.read()
-                    if frame_bgr is None:
-                        break
-
-                    data_dict = {
-                        "frame": frame_bgr,
-                        "frame_index": frame_index,
-                        "video_name": video_name,
-                    }
-                    frame_index += 1
-
-                    await self.data_to_output_queues(data_dict, "video_frame")
+                try:
+                    frame_width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frame_height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    video_fps = self.capture.get(cv2.CAP_PROP_FPS)
+                    video_path_str = str(video_path)
+                    while self.capture.isOpened():
+                        # Capture frame-by-frame.
+                        ret, frame_bgr = self.capture.read()
+                        if not ret:
+                            break
+                        dataout_dict = {
+                            "frame": frame_bgr,
+                            "video_name": video_name,
+                            "video_path": video_path_str,
+                            "frame_width": frame_width,
+                            "frame_height": frame_height,
+                            "video_fps": video_fps,
+                            "frame_index": frame_index,
+                        }
+                        frame_index += 1
+                        await self.data_to_output_queues(dataout_dict, "video_frame")
+                finally:
+                    if self.capture:
+                        self.capture.release()
+                        self.capture = None
 
         except Exception as e:
             message = self.class_name + " - process_data. "

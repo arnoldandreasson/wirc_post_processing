@@ -22,7 +22,7 @@ def run_command(row):
         print("\n\nERROR: Wrong value. Please try again.\n\n")
         return
     #
-    engine = core.WorkflowEngine()
+    engine = core.WorkflowEngine(logger_name=core.logger_name)
     engine.run_startup(workflow_configs[row - 1])
 
 

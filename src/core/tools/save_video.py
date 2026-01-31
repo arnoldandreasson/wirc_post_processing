@@ -21,7 +21,6 @@ class SaveVideo(core.WorkflowModuleBase):
     def clear(self):
         """ """
         super().clear()
-        self.input_queue_size = 100
         #
         self.video_out = None
 
@@ -43,13 +42,9 @@ class SaveVideo(core.WorkflowModuleBase):
     async def process_data(self, data_dict={}):
         """Put your algorithmic code here."""
         try:
-            if data_dict == False:
-                print("DEBUG: False")
-                return
-
             frame_bgr = data_dict.get("frame", None)
-            frame_index = data_dict.get("frame_index", None)
             video_name = data_dict.get("video_name", None)
+            frame_index = data_dict.get("frame_index", None)
 
             if self.video_out == None:
                 out_path = "./test_workflow_video.mp4"
@@ -59,9 +54,9 @@ class SaveVideo(core.WorkflowModuleBase):
                 # frame_width = 1280
                 # frame_height = 800
                 # fps = 30
-                frame_width = 256
-                frame_height = 384
-                fps = 25
+                frame_width = data_dict.get("frame_width", None)
+                frame_height = data_dict.get("frame_height", None)
+                fps = data_dict.get("video_fps", None)
 
                 fourcc = cv2.VideoWriter_fourcc(*"avc1")  # AVC1 is equal to H.264.
                 self.video_out = cv2.VideoWriter(

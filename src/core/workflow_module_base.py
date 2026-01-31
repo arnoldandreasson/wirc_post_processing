@@ -22,6 +22,7 @@ class WorkflowModuleBase:
         self.worker_task = None
         self.input_queue = None
         self.output_queues = []
+        self.input_queue_size = 100
 
     @abc.abstractmethod
     def configure(self, config_dict):

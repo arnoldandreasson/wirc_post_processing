@@ -52,7 +52,7 @@ class VideoFile(core.WorkflowModuleBase):
 
             for path in results:
                 data_dict = {
-                    "data": path,
+                    "video_path": path,
                 }
                 await self.data_to_output_queues(data_dict, "video_path")
 

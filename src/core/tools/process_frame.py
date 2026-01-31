@@ -3,7 +3,8 @@
 import asyncio
 import logging
 import pathlib
-from datetime import datetime
+import datetime
+import dateutil
 import cv2
 
 import src.core as core
@@ -21,38 +22,41 @@ class ProcessFrame(core.WorkflowModuleBase):
     def clear(self):
         """ """
         super().clear()
-        self.input_queue_size = 100
+        self.background_sub = None
+        self.kernel = None
 
     def configure(self, config_dict):
         """ """
         super().configure(config_dict)
         p = config_dict.get("parameters", {})
+        # Kernel size options: 3, 5, 7, etc.
+        self.kernel_size = p.get("kernel_size", 5)
+        self.min_contour_area = p.get("min_contour_area", 5)
+        self.max_contour_area = p.get("max_contour_area", 5)
+        self.text_info = p.get("text_info", False)
+        self.font_scale = p.get("font_scale", 1.0)
 
     async def pre_process_data(self):
         """ """
         await super().pre_process_data()
 
-        # Background.
-        self.backSub = cv2.createBackgroundSubtractorMOG2()
+        # Background subtractor.
+        self.background_sub = cv2.createBackgroundSubtractorMOG2()
         # Kernel for morphologyEx.
-        kernel_size = (5, 5)
-        kernel_size = (3, 3)
+        kernel_size = (self.kernel_size, self.kernel_size)
         self.kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernel_size)
 
     async def process_data(self, data_dict={}):
         """Put your algorithmic code here."""
         try:
-            if data_dict == False:
-                print("DEBUG: False")
-                return
-
             frame_bgr = data_dict.get("frame", None)
-            frame_index = data_dict.get("frame_index", None)
             video_name = data_dict.get("video_name", None)
+            frame_index = int(data_dict.get("frame_index", 0))
+            video_fps = data_dict.get("video_fps", 0)
 
             # Apply background subtraction.
             frame_gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
-            foreground_mask_1 = self.backSub.apply(frame_gray)
+            foreground_mask_1 = self.background_sub.apply(frame_gray)
 
             # Apply erosion and dilation.
             foreground_mask = cv2.morphologyEx(
@@ -64,33 +68,76 @@ class ProcessFrame(core.WorkflowModuleBase):
                 foreground_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
             )
 
-            min_contour_area = 50
-            max_contour_area = 500
-            # min_contour_area = 500
-            # max_contour_area = 5000
-            large_contours = [
+            # Remove small and big contours.
+            selected_contours = [
                 cnt
                 for cnt in contours
-                if (cv2.contourArea(cnt) > min_contour_area)
-                and (cv2.contourArea(cnt) < max_contour_area)
+                if (cv2.contourArea(cnt) > self.min_contour_area)
+                and (cv2.contourArea(cnt) < self.max_contour_area)
             ]
 
-            if len(large_contours) > 0:
+            if len(selected_contours) > 0:
 
+                # Draw bounding box.
                 frame_out = frame_bgr.copy()
-                for cnt in large_contours:
+                for cnt in selected_contours:
                     x, y, w, h = cv2.boundingRect(cnt)
                     frame_out = cv2.rectangle(
                         frame_out, (x, y), (x + w, y + h), (0, 0, 200), 1
                     )
 
-                data_dict = {
-                    "frame": frame_out,
-                    "frame_index": frame_index,
-                    "video_name": video_name,
-                }
+                # Calculate time.
+                parts = video_name.split("_")
+                if len(parts) >= 2:
+                    part = parts[1]
+                    date_time = dateutil.parser.parse(part)
+                    sec = float(frame_index / video_fps)
+                    date_time += datetime.timedelta(seconds=sec)
 
-                await self.data_to_output_queues(data_dict, "video_frame")
+                if self.text_info:
+                    # cv2.rectangle(
+                    #     frame_out,
+                    #     (10, 2),
+                    #     (100, 20),
+                    #     (255, 255, 255),
+                    #     -1,
+                    # )
+                    cv2.putText(
+                        frame_out,
+                        video_name,
+                        (int(20 * self.font_scale), int(25 * self.font_scale)),
+                        cv2.FONT_HERSHEY_PLAIN,
+                        self.font_scale,
+                        (192, 192, 192),
+                        1,
+                    )
+                    text = date_time.isoformat().replace("T", " ")[:-3]
+                    cv2.putText(
+                        frame_out,
+                        text,
+                        (int(20 * self.font_scale), int(50 * self.font_scale)),
+                        cv2.FONT_HERSHEY_PLAIN,
+                        self.font_scale,
+                        (192, 192, 192),
+                    )
+
+                # Copy from input.
+                dataout_dict = {
+                    key: data_dict[key]
+                    for key in [
+                        "video_name",
+                        "video_path",
+                        "frame_width",
+                        "frame_height",
+                        "video_fps",
+                        "frame_index",
+                    ]
+                }
+                # Add frame with movements.
+                dataout_dict["frame"] = frame_out
+                dataout_dict["date_time"] = date_time
+
+                await self.data_to_output_queues(dataout_dict, "video_frame")
         except Exception as e:
             message = self.class_name + " - process_data. "
             message += "Exception: " + str(e)

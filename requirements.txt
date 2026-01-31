@@ -7,7 +7,8 @@ pillow
 # # Audio.
 # sounddevice
 # soundfile
-# # Calculations.
+# Calculations.
+python-dateutil
 # numpy
 # scipy
 # Config.
