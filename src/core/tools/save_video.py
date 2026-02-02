@@ -90,7 +90,6 @@ class SaveVideo(core.WorkflowModuleBase):
         """ """
         source_file = data_dict.get("source_file", None)
         video_name = data_dict.get("video_name", None)
-        # date_time_str = data_dict.get("date_time_str", None)
 
         # Parent dir and target dir path.
         source_file = pathlib.Path(source_file)
@@ -99,18 +98,14 @@ class SaveVideo(core.WorkflowModuleBase):
         if not target_dir_path.exists():
             target_dir_path.mkdir(parents=True)
 
-        # Rename source file to out video file.
-        suffix = source_file.suffix
-        target_file = video_name.replace(suffix, "_SCANNER" + suffix)
-        # target_file_path = pathlib.Path(target_dir_path, target_file)
-        # target_file_path_str = str(target_file_path)
-
         # Convert filename to full hour.
         video_name_stem = pathlib.Path(video_name).stem
+        video_name_suffix = pathlib.Path(video_name).suffix
         parts = video_name_stem.split("_")
         if len(parts) >= 2:
-            part = parts[1]
-            date_time = dateutil.parser.parse(part)
+            prefix = parts[0]
+            time_part = parts[1]
+            date_time = dateutil.parser.parse(time_part)
             # date_time = dateutil.parser.parse(date_time_str)
             next_time_hour = date_time.replace(
                 second=0,
@@ -121,12 +116,14 @@ class SaveVideo(core.WorkflowModuleBase):
             next_time_hour_str = (
                 str(next_time_hour).replace(" ", "T").replace("-", "").replace(":", "")
             )
-            target_file = target_file.replace(part, next_time_hour_str)
-        #
-        target_file_path = pathlib.Path(target_dir_path, target_file)
-        target_file_path_str = str(target_file_path)
+            target_file = (
+                prefix + "_" + next_time_hour_str + "_SCANNER" + video_name_suffix
+            )
+        else:
+            target_file = video_name
 
-        return target_file_path_str
+        target_file_path = pathlib.Path(target_dir_path, target_file)
+        return str(target_file_path)
 
     def new_video_writer(self, data_dict, out_path):
         """ """
