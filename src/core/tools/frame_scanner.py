@@ -11,7 +11,7 @@ import src.core as core
 import src.core.tools as tools
 
 
-class ProcessFrame(core.WorkflowModuleBase):
+class FrameScanner(core.WorkflowModuleBase):
     """ """
 
     def __init__(self, logger=None, logger_name="DefaultLogger"):
