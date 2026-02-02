@@ -1,24 +1,23 @@
 # Workflow defined in YAML.
 ---
 workflow:
-  - tool_id: video_files
+  - tool_id: source_files
     description: Get list of video files.
     input_from: # None
     input_format: # None
     input_queue_size: 10
-    tool: VideoFiles
+    tool: SourceFiles
     parameters:
       source_dir: ./wirc_recordings/
-      # path_glob_string: "**/*.mp4"
-      # path_glob_string: "**/rpi-cam0_20260117T2308*.mp4"
-      # path_glob_string: "**/usb-cam0_20260117T230*.mp4"
-      path_glob_string: "**/cam0_20260111T16*.mp4"
+      path_glob_string: "**/*.mp4"
+      # path_glob_string: "**/rpi-cam0_*.mp4"
+      # path_glob_string: "**/usb-cam0_*.mp4"
     output_formats:
       - video_path
 
   - tool_id: read_video
     description: Read video file.
-    input_from: video_files
+    input_from: source_files
     input_format: video_path
     input_queue_size: 10
     tool: ReadVideo

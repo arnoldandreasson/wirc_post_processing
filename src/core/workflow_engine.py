@@ -6,7 +6,6 @@ import pathlib
 import yaml
 from datetime import datetime
 
-import src.core as core
 import src.core.tools as tools
 
 
@@ -93,7 +92,10 @@ class WorkflowEngine:
         try:
             try:
                 time_start = datetime.now()
-                self.logger.info("Processing started at: " + time_start.isoformat().replace("T", " ")[:-3])
+                self.logger.info(
+                    "Processing started at: "
+                    + time_start.isoformat().replace("T", " ")[:-3]
+                )
                 for tool_id in self.workflow_tools:
                     tool_dict = self.tool_config[tool_id]
                     if tool_id in self.tool_lookup:

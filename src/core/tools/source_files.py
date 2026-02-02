@@ -9,7 +9,7 @@ import src.core as core
 import src.core.tools as tools
 
 
-class VideoFile(core.WorkflowModuleBase):
+class SourceFiles(core.WorkflowModuleBase):
     """ """
 
     def __init__(self, logger=None, logger_name="DefaultLogger"):
@@ -26,7 +26,7 @@ class VideoFile(core.WorkflowModuleBase):
         super().configure(config_dict)
         p = config_dict.get("parameters", {})
         self.source_dir = p.get("source_dir", "./wirc_recordings/")
-        self.path_glob_string = p.get("path_glob_string", "**/*.mp4")
+        self.path_glob_string = p.get("path_glob_string", "**/rpi-cam0_*.mp4")
 
     async def pre_process_data(self):
         """ """
@@ -41,11 +41,11 @@ class VideoFile(core.WorkflowModuleBase):
             if not source_path.exists():
                 source_path.mkdir(parents=True)
 
-            video_files = list(source_path.glob(self.path_glob_string))
+            source_files = list(source_path.glob(self.path_glob_string))
 
-            for video_file in video_files:
-                if video_file:
-                    results.append(str(video_file))
+            for source_file in source_files:
+                if source_file:
+                    results.append(str(source_file))
             self.logger.info("Video source dir: " + str(source_path.resolve()))
             self.logger.info("Number of video files found: " + str(len(results)))
             results.sort()

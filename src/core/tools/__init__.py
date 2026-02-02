@@ -1,6 +1,6 @@
 import src.core as core
 
-from src.core.tools.video_files import VideoFile
+from src.core.tools.source_files import SourceFiles
 from src.core.tools.read_video import ReadVideo
 from src.core.tools.process_frame import ProcessFrame
 from src.core.tools.save_video import SaveVideo
@@ -9,8 +9,8 @@ from src.core.tools.save_video import SaveVideo
 def tool_factory(tool):
     """ """
     tool_object = None
-    if tool == "VideoFiles":
-        tool_object = VideoFile(logger_name=core.logger_name)
+    if tool == "SourceFiles":
+        tool_object = SourceFiles(logger_name=core.logger_name)
     elif tool == "ReadVideo":
         tool_object = ReadVideo(logger_name=core.logger_name)
     elif tool == "ProcessFrame":
