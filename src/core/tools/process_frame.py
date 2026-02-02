@@ -51,8 +51,8 @@ class ProcessFrame(core.WorkflowModuleBase):
         try:
             frame_bgr = data_dict.get("frame", None)
             video_name = data_dict.get("video_name", None)
-            frame_index = int(data_dict.get("frame_index", 0))
-            video_fps = data_dict.get("video_fps", 0)
+            frame_index = data_dict.get("frame_index", None)
+            date_time_str = data_dict.get("date_time_str", None)
 
             # Apply background subtraction.
             frame_gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
@@ -76,7 +76,8 @@ class ProcessFrame(core.WorkflowModuleBase):
                 and (cv2.contourArea(cnt) < self.max_contour_area)
             ]
 
-            if len(selected_contours) > 0:
+            # Always send first frame, or frames with movements.
+            if (len(selected_contours) > 0) or (frame_index == 0):
 
                 # Draw bounding box.
                 frame_out = frame_bgr.copy()
@@ -85,14 +86,6 @@ class ProcessFrame(core.WorkflowModuleBase):
                     frame_out = cv2.rectangle(
                         frame_out, (x, y), (x + w, y + h), (0, 0, 200), 1
                     )
-
-                # Calculate time.
-                parts = video_name.split("_")
-                if len(parts) >= 2:
-                    part = parts[1]
-                    date_time = dateutil.parser.parse(part)
-                    sec = float(frame_index / video_fps)
-                    date_time += datetime.timedelta(seconds=sec)
 
                 if self.text_info:
                     # cv2.rectangle(
@@ -111,7 +104,7 @@ class ProcessFrame(core.WorkflowModuleBase):
                         (192, 192, 192),
                         1,
                     )
-                    text = date_time.isoformat().replace("T", " ")[:-3]
+                    text = date_time_str.replace("T", " ")
                     cv2.putText(
                         frame_out,
                         text,
@@ -126,16 +119,16 @@ class ProcessFrame(core.WorkflowModuleBase):
                     key: data_dict[key]
                     for key in [
                         "video_name",
-                        "video_path",
+                        "source_file",
                         "frame_width",
                         "frame_height",
                         "video_fps",
                         "frame_index",
+                        "date_time_str",
                     ]
                 }
                 # Add frame with movements.
                 dataout_dict["frame"] = frame_out
-                dataout_dict["date_time"] = date_time
 
                 await self.data_to_output_queues(dataout_dict, "video_frame")
         except Exception as e:

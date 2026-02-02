@@ -4,7 +4,8 @@ import asyncio
 import logging
 import pathlib
 import cv2
-from datetime import datetime
+import datetime
+import dateutil
 
 import src.core as core
 import src.core.tools as tools
@@ -35,37 +36,54 @@ class ReadVideo(core.WorkflowModuleBase):
     async def process_data(self, data_dict={}):
         """Put your algorithmic code here."""
         try:
-            video_path = data_dict.get("video_path", None)
-            if video_path == None:
+            source_file = data_dict.get("source_file", None)
+            if source_file == None:
                 return
-            video_path = pathlib.Path(video_path)
-            video_name = video_path.name
-            self.logger.info("File: " + video_name)
+            source_file = pathlib.Path(source_file)
+            video_name = source_file.name
+            self.logger.info("Source file: " + video_name)
 
             # Video stream.
             frame_index = 0
-            self.capture = cv2.VideoCapture(video_path)
+            self.capture = cv2.VideoCapture(source_file)
             if not self.capture.isOpened():
-                self.logger.error("Error opening video file: " + video_path.name)
+                self.logger.error("Error opening video file: " + source_file.name)
             else:
                 try:
                     frame_width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
                     frame_height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
                     video_fps = self.capture.get(cv2.CAP_PROP_FPS)
-                    video_path_str = str(video_path)
+                    source_file_str = str(source_file)
                     while self.capture.isOpened():
                         # Capture frame-by-frame.
                         ret, frame_bgr = self.capture.read()
                         if not ret:
                             break
+
+                        # Calculate time for frame.
+                        date_time_str = None
+                        video_name_stem = pathlib.Path(video_name).stem
+                        parts = video_name_stem.split("_")
+                        if len(parts) >= 2:
+                            part = parts[1]
+                            date_time = dateutil.parser.parse(part)
+                            sec = float(frame_index / video_fps)
+                            if sec == 0.0:
+                                date_time_str = date_time.isoformat()
+                            else:
+                                date_time += datetime.timedelta(seconds=sec)
+                                date_time_str = date_time.isoformat()[:-3]
+
+                        # Prepare outdata dict.
                         dataout_dict = {
                             "frame": frame_bgr,
                             "video_name": video_name,
-                            "video_path": video_path_str,
+                            "source_file": source_file_str,
                             "frame_width": frame_width,
                             "frame_height": frame_height,
                             "video_fps": video_fps,
                             "frame_index": frame_index,
+                            "date_time_str": date_time_str,
                         }
                         frame_index += 1
                         await self.data_to_output_queues(dataout_dict, "video_frame")

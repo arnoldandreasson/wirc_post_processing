@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import pathlib
+import dateutil
 import cv2
 from datetime import datetime
 
@@ -28,7 +29,7 @@ class SaveVideo(core.WorkflowModuleBase):
         """ """
         super().configure(config_dict)
         p = config_dict.get("parameters", {})
-        
+        self.target_dir = p.get("target_dir", "./video_target")
         # Background.
         self.backSub = cv2.createBackgroundSubtractorMOG2()
         # Kernel for morphologyEx.
@@ -39,38 +40,38 @@ class SaveVideo(core.WorkflowModuleBase):
         """ """
         await super().pre_process_data()
 
+        self.video_name_old = ""
+        self.video_out_path_old = ""
+
     async def process_data(self, data_dict={}):
         """Put your algorithmic code here."""
         try:
             frame_bgr = data_dict.get("frame", None)
             video_name = data_dict.get("video_name", None)
-            frame_index = data_dict.get("frame_index", None)
 
-            if self.video_out == None:
-                out_path = "./test_workflow_video.mp4"
-                # frame_width = 1456
-                # frame_height = 1088
-                # fps = 30
-                # frame_width = 1280
-                # frame_height = 800
-                # fps = 30
-                frame_width = data_dict.get("frame_width", None)
-                frame_height = data_dict.get("frame_height", None)
-                fps = data_dict.get("video_fps", None)
+            # Check for each new source file.
+            if video_name != self.video_name_old:
+                self.video_name_old = video_name
 
-                fourcc = cv2.VideoWriter_fourcc(*"avc1")  # AVC1 is equal to H.264.
-                self.video_out = cv2.VideoWriter(
-                    out_path,
-                    fourcc,
-                    fps,
-                    (frame_width, frame_height),
-                )
+                # Check if new video file should be created.
+                video_out_path = self.outdata_file_path(data_dict)
+                if video_out_path != self.video_out_path_old:
+                    self.video_out_path_old = video_out_path
+                    self.new_video_writer(data_dict, video_out_path)
+                    #
+                    # video_name_name = pathlib.Path(video_out_path).name
+                    # self.logger.info("New video file: " + video_name_name)
+                    self.logger.info("New video file: " + video_out_path)
 
-            self.video_out.write(frame_bgr)
+                # Fallback for test, should not happen.
+                if self.video_out == None:
+                    self.logger.error("ERROR. Failed to create video. Try again.")
+                    self.new_video_writer(data_dict, video_out_path)
 
-            # finally:
-            #     if self.video_out:
-            #         self.video_out.release()
+            if self.video_out:
+                self.video_out.write(frame_bgr)
+            else:
+                self.logger.error("Exception: Failed to write frame to file.")
 
         except Exception as e:
             message = self.class_name + " - process_data. "
@@ -80,3 +81,67 @@ class SaveVideo(core.WorkflowModuleBase):
     async def post_process_data(self):
         """ """
         await super().post_process_data()
+
+        if self.video_out:
+            self.video_out.release()
+            self.video_out = None
+
+    def outdata_file_path(self, data_dict):
+        """ """
+        source_file = data_dict.get("source_file", None)
+        video_name = data_dict.get("video_name", None)
+        # date_time_str = data_dict.get("date_time_str", None)
+
+        # Parent dir and target dir path.
+        source_file = pathlib.Path(source_file)
+        parent_dir = source_file.parent.name
+        target_dir_path = pathlib.Path(self.target_dir, parent_dir)
+        if not target_dir_path.exists():
+            target_dir_path.mkdir(parents=True)
+
+        # Rename source file to out video file.
+        suffix = source_file.suffix
+        target_file = video_name.replace(suffix, "_SCANNER" + suffix)
+        # target_file_path = pathlib.Path(target_dir_path, target_file)
+        # target_file_path_str = str(target_file_path)
+
+        # Convert filename to full hour.
+        video_name_stem = pathlib.Path(video_name).stem
+        parts = video_name_stem.split("_")
+        if len(parts) >= 2:
+            part = parts[1]
+            date_time = dateutil.parser.parse(part)
+            # date_time = dateutil.parser.parse(date_time_str)
+            next_time_hour = date_time.replace(
+                second=0,
+                microsecond=0,
+                minute=0,
+                hour=date_time.hour,
+            )
+            next_time_hour_str = (
+                str(next_time_hour).replace(" ", "T").replace("-", "").replace(":", "")
+            )
+            target_file = target_file.replace(part, next_time_hour_str)
+        #
+        target_file_path = pathlib.Path(target_dir_path, target_file)
+        target_file_path_str = str(target_file_path)
+
+        return target_file_path_str
+
+    def new_video_writer(self, data_dict, out_path):
+        """ """
+        if self.video_out:
+            self.video_out.release()
+            self.video_out = None
+
+        frame_width = data_dict.get("frame_width", None)
+        frame_height = data_dict.get("frame_height", None)
+        fps = data_dict.get("video_fps", None)
+
+        fourcc = cv2.VideoWriter_fourcc(*"avc1")  # AVC1 is equal to H.264.
+        self.video_out = cv2.VideoWriter(
+            out_path,
+            fourcc,
+            fps,
+            (frame_width, frame_height),
+        )

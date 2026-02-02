@@ -13,12 +13,12 @@ workflow:
       # path_glob_string: "**/rpi-cam0_*.mp4"
       # path_glob_string: "**/usb-cam0_*.mp4"
     output_formats:
-      - video_path
+      - source_file
 
   - tool_id: read_video
     description: Read video file.
     input_from: source_files
-    input_format: video_path
+    input_format: source_file
     input_queue_size: 10
     tool: ReadVideo
     parameters:

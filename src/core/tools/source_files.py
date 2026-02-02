@@ -36,25 +36,25 @@ class SourceFiles(core.WorkflowModuleBase):
         """Put your algorithmic code here."""
         try:
             results = []
-            source_path = pathlib.Path(self.source_dir)
+            source_file = pathlib.Path(self.source_dir)
             # Create empty source dir if not exists.
-            if not source_path.exists():
-                source_path.mkdir(parents=True)
+            if not source_file.exists():
+                source_file.mkdir(parents=True)
 
-            source_files = list(source_path.glob(self.path_glob_string))
+            source_files = list(source_file.glob(self.path_glob_string))
 
             for source_file in source_files:
                 if source_file:
                     results.append(str(source_file))
-            self.logger.info("Video source dir: " + str(source_path.resolve()))
-            self.logger.info("Number of video files found: " + str(len(results)))
+            self.logger.info("Source dir: " + str(source_file.resolve()))
+            self.logger.info("Number of source files found: " + str(len(results)))
             results.sort()
 
             for path in results:
                 data_dict = {
-                    "video_path": path,
+                    "source_file": path,
                 }
-                await self.data_to_output_queues(data_dict, "video_path")
+                await self.data_to_output_queues(data_dict, "source_file")
 
         except Exception as e:
             message = self.class_name + " - process_data. "
@@ -66,4 +66,4 @@ class SourceFiles(core.WorkflowModuleBase):
         await super().post_process_data()
 
         # This tool is finished. No more data.
-        await self.data_to_output_queues(None, "video_path")
+        await self.data_to_output_queues(None, "source_file")
