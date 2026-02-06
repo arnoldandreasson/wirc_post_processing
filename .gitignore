@@ -2,3 +2,6 @@ venv
 **/__pycache__
 
 **/*.mp4
+wirc_recordings*
+wirc_target*
+video_target*

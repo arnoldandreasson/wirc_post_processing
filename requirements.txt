@@ -13,6 +13,9 @@ python-dateutil
 # scipy
 # Config.
 pyyaml
+# Plotting.
+matplotlib
+scipy
 # VS Code.
 pylint
 black

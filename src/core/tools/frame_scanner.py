@@ -31,8 +31,8 @@ class FrameScanner(core.WorkflowModuleBase):
         p = config_dict.get("parameters", {})
         # Kernel size options: 3, 5, 7, etc.
         self.kernel_size = p.get("kernel_size", 5)
-        self.min_contour_area = p.get("min_contour_area", 5)
-        self.max_contour_area = p.get("max_contour_area", 5)
+        self.min_contour_area = p.get("min_contour_area", 50)
+        self.max_contour_area = p.get("max_contour_area", 5000)
         self.text_info = p.get("text_info", False)
         self.font_scale = p.get("font_scale", 1.0)
 
@@ -98,7 +98,7 @@ class FrameScanner(core.WorkflowModuleBase):
                     cv2.putText(
                         frame_out,
                         video_name,
-                        (int(20 * self.font_scale), int(25 * self.font_scale)),
+                        (int(20 * self.font_scale), int(35 * self.font_scale)),
                         cv2.FONT_HERSHEY_PLAIN,
                         self.font_scale,
                         (192, 192, 192),
@@ -108,7 +108,7 @@ class FrameScanner(core.WorkflowModuleBase):
                     cv2.putText(
                         frame_out,
                         text,
-                        (int(20 * self.font_scale), int(50 * self.font_scale)),
+                        (int(20 * self.font_scale), int(60 * self.font_scale)),
                         cv2.FONT_HERSHEY_PLAIN,
                         self.font_scale,
                         (192, 192, 192),
