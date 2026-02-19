@@ -135,7 +135,15 @@ class SaveVideo(core.WorkflowModuleBase):
         frame_height = data_dict.get("frame_height", None)
         fps = data_dict.get("video_fps", None)
 
-        fourcc = cv2.VideoWriter_fourcc(*"avc1")  # AVC1 is equal to H.264.
+        fourcc = cv2.VideoWriter_fourcc(*"avc1")  # AVC1 is equal to H.264 in mp4.
+        # fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Older codec. For RPi5 in mp4.
+        # fourcc = cv2.VideoWriter_fourcc(*"DIVX")  # Suffix should be ".avi".
+        # out_path = out_path.replace(".mp4", ".avi")
+        # fourcc = cv2.VideoWriter_fourcc(*"mpg1")  # Suffix should be ".mpg".
+        # out_path = out_path.replace(".mp4", ".mpg")
+        # fourcc = cv2.VideoWriter_fourcc(*"mpg1")  # Suffix should be ".avi".
+        # out_path = out_path.replace(".mp4", ".avi")
+
         self.video_out = cv2.VideoWriter(
             out_path,
             fourcc,
